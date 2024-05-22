@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Check Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 90%;
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        button, input[type="text"] {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input[type="text"] {
+            width: 80%;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Vibe Check Quiz</h1>
+        <div id="quiz">
+            <div class="question" id="question"></div>
+            <input type="text" id="answerInput" placeholder="Type your answer here">
+            <div>
+                <button onclick="nextQuestion()">Next</button>
+            </div>
+        </div>
+        <div id="result" style="display: none;">
+            <h2 id="resultText"></h2>
+            <p>Send this link to your friends:</p>
+            <input type="text" id="link" readonly>
+            <button onclick="restart()">Start Over</button>
+        </div>
+    </div>
+    <script>
+        const questions = [
+            "What's your favorite snack?",
+            "Who's your favorite artist?",
+            "What's your go-to comfort show?",
+            "What's your favorite meme?",
+            "What's your favorite song right now?",
+            "What's your dream vacation spot?",
+            "Who's your celeb crush?",
+            "What's your favorite book?",
+            "What's your favorite hobby?",
+            "What's your favorite slang word?"
+        ];
+
+        let currentQuestionIndex = 0;
+        const userAnswers = [];
+
+        function showQuestion() {
+            if (currentQuestionIndex < questions.length) {
+                document.getElementById('question').textContent = questions[currentQuestionIndex];
+                document.getElementById('answerInput').value = '';
+            } else {
+                const userAnswersString = JSON.stringify(userAnswers);
+                const encodedAnswers = encodeURIComponent(userAnswersString);
+                const link = `${window.location.origin}${window.location.pathname}?answers=${encodedAnswers}`;
+                
+                document.getElementById('quiz').style.display = 'none';
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('resultText').textContent = "You finished the quiz!";
+                document.getElementById('link').value = link;
+            }
+        }
+
+        function nextQuestion() {
+            const answer = document.getElementById('answerInput').value.trim();
+            if (answer) {
+                userAnswers.push(answer);
+                currentQuestionIndex++;
+                showQuestion();
+            } else {
+                alert("Please enter an answer!");
+            }
+        }
+
+        function restart() {
+            currentQuestionIndex = 0;
+            userAnswers.length = 0;
+            document.getElementById('quiz').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            showQuestion();
+        }
+
+        function compareAnswers(userAnswers, friendAnswers) {
+            let matches = 0;
+            for (let i = 0; i < userAnswers.length; i++) {
+                if (userAnswers[i].toLowerCase() === friendAnswers[i].toLowerCase()) {
+                    matches++;
+                }
+            }
+            return matches;
+        }
+
+        // Check if this is a friend's attempt
+        const urlParams = new URLSearchParams(window.location.search);
+        const friendAnswersEncoded = urlParams.get('answers');
+
+        if (friendAnswersEncoded) {
+            document.getElementById('quiz').style.display = 'none';
+            const friendAnswers = JSON.parse(decodeURIComponent(friendAnswersEncoded));
+            let friendAnswersHtml = '';
+            friendAnswers.forEach((answer, index) => {
+                friendAnswersHtml += `<p>${questions[index]}: ${answer}</p>`;
+            });
+            const userAnswersString = prompt("Enter your answers as a JSON array to compare:");
+            const userAnswersParsed = JSON.parse(userAnswersString);
+            const matches = compareAnswers(userAnswersParsed, friendAnswers);
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('resultText').innerHTML = `
+                <h2>You matched ${matches} out of ${questions.length} answers!</h2>
+                ${friendAnswersHtml}
+            `;
+            document.getElementById('link').style.display = 'none';
+        } else {
+            showQuestion();
+        }
+    </script>
+</body>
+</html>
